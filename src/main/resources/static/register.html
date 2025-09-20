@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <style>
+        /* Fullscreen background image */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url("images/WallpaperDog-20464523.jpg") no-repeat center center/cover;
+            color: #fff;
+        }
+
+        /* Glassmorphism form box */
+        .Singin-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 40px 30px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .Singin-box h1 {
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .input-box {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-box input,
+        .input-box select {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            outline: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .creat-acc {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: #fff;
+            color: #2b2d42;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .creat-acc:hover {
+            background: #1d3557;
+            color: #fff;
+        }
+
+        a {
+            color: #fff;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="Singin-box">
+    <h1>Register</h1>
+    <form id="registerForm">
+        <div class="input-box">
+            <input type="text" id="name" placeholder="Name" required />
+        </div>
+        <div class="input-box">
+            <input type="email" id="email" placeholder="E-mail" required />
+        </div>
+        <div class="input-box">
+            <input type="password" id="password" placeholder="Password" required />
+        </div>
+        <div class="input-box">
+            <select id="role" required>
+                <option value="USER">User</option>
+                <option value="ADMIN">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="creat-acc">Create Account</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login</a></p>
+</div>
+
+<script>
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, role }),
+            });
+
+            if (res.ok) {
+                alert("Account created successfully!");
+                window.location.href = "login.html";
+            } else {
+                const errorMsg = await res.text();
+                alert("Registration failed: " + errorMsg);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error during registration.");
+        }
+    });
+</script>
+</body>
+</html>

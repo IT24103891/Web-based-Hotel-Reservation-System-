@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #0a1f44;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .navbar ul {
+            list-style: none;
+        }
+        .navbar ul li {
+            display: inline-block;
+            margin: 0 20px;
+        }
+        .navbar ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .navbar ul li a:hover {
+            text-decoration: underline;
+        }
+
+        /* Hero Section with background */
+        .hero {
+            background: url("images/panoramic-holiday-landscape-luxurious-beach-resort-hotel-swimming-pool-and-beach-chairs-or-loungers-under-umbrellas-with-palm-trees-blue-sunny-sky-summer-island-seaside-travel-vacation-background-photo.jpg") no-repeat center center/cover;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Search Box */
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .tabs {
+            display: flex;
+        }
+        .tabs button {
+            padding: 10px 20px;
+            border: none;
+            background: #e0e0e0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tabs button.active {
+            background: #0a1f44;
+            color: white;
+        }
+        .search-box input {
+            padding: 10px;
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-btn {
+            background: #0a1f44;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-btn:hover {
+            background: #142f66;
+        }
+
+        /* Logout */
+        .logout-container {
+            text-align: center;
+            margin: 20px;
+        }
+        .logout-btn {
+            background: crimson;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar">
+    <ul>
+        <li><a href="#">WHY US</a></li>
+        <li><a href="#">HOTELS</a></li>
+        <li><a href="#">FLIGHTS</a></li>
+        <li><a href="#">SHIPS</a></li>
+        <li><a href="#">TOURS</a></li>
+        <li><a href="#">CONTACTS</a></li>
+    </ul>
+</nav>
+
+<!-- Background Section -->
+<div class="hero">
+    <div class="search-box">
+        <div class="tabs">
+            <button class="active">Hotel</button>
+            <button>Ships</button>
+        </div>
+        <input type="text" placeholder="Hotel Name or Destination">
+        <button class="search-btn">SEARCH</button>
+    </div>
+</div>
+
+<!-- Logout Button -->
+<div class="logout-container">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<script>
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    if (!user || user.role !== "USER") {
+        alert("Unauthorized!");
+        window.location.href = "login.html";
+    }
+
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    }
+</script>
+</body>
+</html>

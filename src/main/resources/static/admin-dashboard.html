@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+<h1>Welcome, Admin!</h1>
+<button onclick="logout()">Logout</button>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role !== "ADMIN") {
+        alert("Unauthorized!");
+        window.location.href = "login.html";
+    }
+
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    }
+</script>
+</body>
+</html>
