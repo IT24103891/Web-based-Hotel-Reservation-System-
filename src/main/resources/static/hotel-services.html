@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* === COLOR VARIABLES === */
+        :root {
+            --color-dark-blue: #0a1f44;
+            --color-accent-green: #28a745;
+            --color-primary-blue: #007bff;
+            --color-light-bg: #f4f6f8;
+            --color-text-dark: #222;
+        }
+
+        /* === BASE STYLES === */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-light-bg);
+            color: #333;
+        }
+
+        /* === HERO HEADER (New Styling for Image) === */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 30vh; /* Taller hero section */
+            background: url('images/BRH1.png') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+        }
+
+        /* Fallback image style (use the provided URL if you name the file 'sri_lanka_hotel_hero.jpg')
+           If you cannot save the generated image locally, use a placeholder URL */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
+        }
+
+        .hero h1 {
+            font-size: 2.8em;
+            color: white;
+            z-index: 1;
+            margin: 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        .back-btn-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 2;
+        }
+
+        .back-btn {
+            background: crimson;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            font-size: 1em;
+        }
+        .back-btn:hover { background: darkred; }
+
+
+        /* === SERVICES GRID === */
+        .services-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0 20px 40px;
+            gap: 30px;
+        }
+
+        .service-card {
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .service-card img {
+            max-width: 100%;
+            border-radius: 10px;
+            height: 180px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .service-card h3 {
+            margin: 10px 0 5px;
+            font-size: 1.3em;
+            color: var(--color-dark-blue); /* Used dark blue for titles */
+            font-weight: 700;
+        }
+
+        .service-card .description {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0 15px;
+        }
+
+        .price-section {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: var(--color-accent-green);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        /* === RESERVE BUTTON (Simplified) === */
+        .reserve-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--color-primary-blue);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+        }
+
+        .reserve-btn:hover {
+            background: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <div class="back-btn-container">
+        <a href="user-dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> &nbsp; Back to Hotels
+        </a>
+    </div>
+    <h1 id="pageTitle">Hotel Services</h1>
+</div>
+
+<div id="services" class="services-container">
+    <p style="width:100%; text-align:center; margin-top: 50px;">Loading services...</p>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    const urlParams = new URLSearchParams(window.location.search);
+    const hotelId = urlParams.get('hotelId');
+    const hotelName = urlParams.get('hotelName');
+
+    if (!user || !user.id) {
+        alert("Please log in first.");
+        window.location.href = "login.html";
+    }
+
+    // Set the page title
+    document.getElementById("pageTitle").textContent = hotelName ? hotelName + " Services" : "Hotel Services";
+
+    async function loadServices() {
+        if (!hotelId) {
+            document.getElementById("services").innerHTML = "<p style='width:100%; text-align:center;'>No hotel specified. Cannot load services.</p>";
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/hotels/${hotelId}/services`);
+
+            if (!res.ok) {
+                const msg = res.status === 404 ? `Hotel with ID ${hotelId} not found.` : `Failed to load services. Status: ${res.status}`;
+                document.getElementById("services").innerHTML = `<p style='width:100%; text-align:center; color:crimson;'>Error: ${msg}</p>`;
+                return;
+            }
+
+            const data = await res.json();
+            const container = document.getElementById("services");
+            container.innerHTML = "";
+
+            if (data.length === 0) {
+                container.innerHTML = "<p style='width:100%; text-align:center;'>No services currently available for this hotel.</p>";
+                return;
+            }
+
+            data.forEach(service => {
+                const div = document.createElement("div");
+                div.classList.add("service-card");
+
+                // Card details with new simplified layout (removed quantity controls)
+                div.innerHTML = `
+                    <div>
+                        <img src="${service.imageUrl || 'https://via.placeholder.com/300x180?text=Service+Image'}" alt="${service.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x180?text=Image+Error'">
+                        <h3>${service.name}</h3>
+                        <p class="description">${service.description}</p>
+                    </div>
+                    <div class="card-footer">
+                        <p class="price-section">$${service.price.toFixed(2)}</p>
+
+                        <button class="reserve-btn" onclick="addToCart(${service.id}, 1)">
+                            <i class="fas fa-calendar-alt"></i> Reserve Service
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error("Error loading services:", err);
+            document.getElementById("services").innerHTML = "<p style='width:100%; text-align:center; color:crimson;'>Error loading services (Check console).</p>";
+        }
+    }
+
+    // MODIFIED addToCart to hardcode quantity=1 (user updates on cart page)
+    async function addToCart(serviceId, quantity) {
+        if (!serviceId) {
+            alert("Invalid service ID.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/cart/add?userId=${user.id}&serviceId=${serviceId}&quantity=1`, {
+                method: "POST"
+            });
+
+            if (res.ok) {
+                alert(`Service added to your selection!`);
+                window.location.href = "cart.html"; // redirect to cart
+            } else {
+                const errorText = await res.text();
+                alert("Failed to reserve service: " + errorText);
+            }
+        } catch (err) {
+            console.error("Error reserving service:", err);
+            alert("Error reserving service.");
+        }
+    }
+
+    loadServices();
+</script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - All Reservations</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* === BASE & LAYOUT === */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #e63946;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* === RESERVATION CARD === */
+        .reservation-card {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #0077b6;
+        }
+
+        .card-details {
+            flex-grow: 1;
+        }
+
+        .card-details p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .card-details b {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .user-id-tag {
+            background: #0077b6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        /* === PRICE & STATUS HIGHLIGHTS === */
+        .price-total {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2a9d8f;
+            margin-top: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        .status-upcoming { background: #d0f0c0; color: #38761d; }
+        .status-past { background: #e2e3e5; color: #6c757d; }
+        .status-current { background: #fff3cd; color: #856404; }
+
+        /* === ACTIONS (Buttons) === */
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .update-btn {
+            background: #007bff;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .update-btn:hover { background: #0056b3; }
+        .delete-btn {
+            background: crimson;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .delete-btn:hover { background: darkred; }
+
+        /* --- MODAL STYLES --- */
+        #updateModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #updateModal > div {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<a href="admin-dashboard.html" style="text-decoration: none; color: #0077b6; font-weight: bold;">← Back to Dashboard</a>
+<h1><i class="fas fa-lock"></i> All System Reservations (Admin View)</h1>
+<div id="reservationsContainer"></div>
+
+
+<div id="updateModal">
+    <div>
+        <h2>Update Reservation Dates</h2>
+        <form id="updateDateForm">
+            <input type="hidden" id="modalReservationId">
+
+            <label for="newCheckIn" style="display:block; margin-top: 10px; font-weight: bold;">New Check-in Date:</label>
+            <input type="date" id="newCheckIn" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+
+            <label for="newCheckOut" style="display:block; margin-top: 10px; font-weight: bold;">New Check-out Date:</label>
+            <input type="date" id="newCheckOut" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+
+            <button type="submit" class="update-btn" style="background:#2a9d8f; margin-top: 20px;">Save Changes</button>
+            <button type="button" onclick="document.getElementById('updateModal').style.display='none'" style="background:#ccc; color:#333; padding: 10px 15px; margin-top: 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    // --- UTILITY FUNCTIONS ---
+    function getStatusBadge(checkInDate, checkOutDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (checkInDate > today) {
+            return `<span class="status-badge status-upcoming"><i class="fas fa-clock"></i> Upcoming</span>`;
+        } else if (checkOutDate > today) {
+            return `<span class="status-badge status-current"><i class="fas fa-check-circle"></i> Current Stay</span>`;
+        } else {
+            return `<span class="status-badge status-past"><i class="fas fa-history"></i> Completed</span>`;
+        }
+    }
+
+    async function loadAllReservations() {
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        // Frontend check for best practice (Backend enforces this with 403)
+
+
+        // Call the unfiltered Admin endpoint
+        const res = await fetch("http://localhost:8080/api/reservations");
+
+        if (res.status === 403) {
+            document.getElementById("reservationsContainer").innerHTML = "<p style='padding: 20px; text-align: center; color: crimson;'>Error 403: Forbidden. Your role does not allow this access.</p>";
+            return;
+        }
+
+        const reservations = await res.json();
+        const container = document.getElementById("reservationsContainer");
+        container.innerHTML = "";
+
+        if (reservations.length === 0) {
+            container.innerHTML = "<p style='padding: 20px; text-align: center;'>No reservations found in the system.</p>";
+            return;
+        }
+
+        reservations.forEach(r => {
+            const card = document.createElement("div");
+            card.className = "reservation-card";
+
+            card.innerHTML = `
+                <div class="card-details">
+                    <p><b>Hotel:</b> ${r.hotelName} ${getStatusBadge(r.checkInDate, r.checkOutDate)}</p>
+                    <p><b>Room:</b> ${r.roomNumber} (${r.type})</p>
+                    <p><b>User:</b> <span class="user-id-tag">ID: ${r.userId}</span></p>
+                    <p><b>Dates:</b> ${r.checkInDate} to ${r.checkOutDate}</p>
+                    <p class="price-total">Total Cost: $${r.totalPrice.toFixed(2)}</p>
+                </div>
+                <div class="card-actions">
+                    <button class="update-btn"
+                            onclick="openUpdateModal(${r.id}, '${r.checkInDate}', '${r.checkOutDate}')">
+                        <i class="fas fa-pen"></i> Update Dates
+                    </button>
+                    <button class="delete-btn" onclick="deleteReservation(${r.id})">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // --- MODAL & ACTION LOGIC (Copied from my-reservations.html) ---
+
+    async function deleteReservation(id) {
+        if (!confirm("ADMIN WARNING: Are you sure you want to delete reservation ID " + id + "?")) return;
+
+        const res = await fetch(`http://localhost:8080/api/reservations/${id}`, {
+            method: "DELETE"
+        });
+        if (res.ok) {
+            alert("Reservation deleted successfully!");
+            loadAllReservations();
+        } else {
+            alert("Failed to delete reservation. Check server logs or permission.");
+        }
+    }
+
+    function openUpdateModal(reservationId, currentCheckIn, currentCheckOut) {
+        const modal = document.getElementById('updateModal');
+
+        document.getElementById('modalReservationId').value = reservationId;
+        document.getElementById('newCheckIn').value = currentCheckIn;
+        document.getElementById('newCheckOut').value = currentCheckOut;
+
+        // Set min date constraints
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('newCheckIn').min = today;
+
+        const minCheckOutDate = new Date(currentCheckIn);
+        minCheckOutDate.setDate(minCheckOutDate.getDate() + 1);
+        document.getElementById('newCheckOut').min = minCheckOutDate.toISOString().split('T')[0];
+
+        modal.style.display = 'flex';
+    }
+    window.openUpdateModal = openUpdateModal;
+
+    document.getElementById("updateDateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('modalReservationId').value;
+        const newCheckInDate = document.getElementById('newCheckIn').value;
+        const newCheckOutDate = document.getElementById('newCheckOut').value;
+
+        const dates = {
+            checkInDate: newCheckInDate,
+            checkOutDate: newCheckOutDate
+        };
+
+        const res = await fetch(`http://localhost:8080/api/reservations/${id}/dates`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dates)
+        });
+
+        if (res.ok) {
+            alert("Reservation dates updated successfully! Total price recalculated.");
+            document.getElementById('updateModal').style.display = 'none';
+            loadAllReservations();
+        } else if (res.status === 409) {
+            alert("❌ Update failed: The room is unavailable for the new dates. Please try another period.");
+        } else if (res.status === 400) {
+            alert("❌ Update failed: Invalid dates (Check-out must be after Check-in).");
+        } else {
+            alert("❌ Update failed due to a server error or lack of permission.");
+        }
+    });
+
+    loadAllReservations();
+</script>
+</body>
+</html>

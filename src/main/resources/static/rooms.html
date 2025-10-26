@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rooms</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* === BASE STYLES === */
+        body {
+            background: #D2D2D2;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 100px; /* Space for sticky navbar and filter bar */
+        }
+
+        /* === NAVBAR AND STICKY FILTER BAR === */
+        .navbar {
+            background: rgba(10, 31, 68, 0.9);
+            padding: 15px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            position: fixed; /* Made fixed */
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+        }
+
+        .filter-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 0 auto; /* Removed top margin */
+            max-width: 1200px;
+            background: rgba(10, 31, 68, 0.95); /* Changed BG to dark to contrast with body */
+            padding: 15px;
+            border-radius: 0 0 10px 10px;
+            flex-wrap: wrap;
+            position: fixed; /* Made fixed */
+            top: 60px; /* Positioned right below navbar (assuming navbar height ~60px) */
+            left: 0;
+            right: 0;
+            z-index: 15;
+            color: white; /* Text color for dark background */
+        }
+
+        .filter-box input[type="text"],
+        .filter-box input[type="number"],
+        .filter-box select,
+        .filter-box input[type="date"] {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 180px;
+            color: #333;
+        }
+
+        .filter-box button {
+            background: #ffd700; /* Contrast button */
+            color: #0a1f44;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .filter-box button:hover {
+            background: #e6c200;
+        }
+
+        .filter-info {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        /* END STICKY FILTER BAR */
+
+        .back-btn {
+            background: crimson;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .back-btn:hover { background: darkred; }
+
+        #hotelName { font-weight: bold; font-size: 18px; }
+
+        /* Rooms grid */
+        #roomsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .room-card {
+            background: rgba(10, 31, 68, 0.85);
+            color: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, opacity 0.3s, background 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* NEW: Unavailable card styling */
+        .room-card.unavailable-dates {
+            opacity: 0.7;
+            box-shadow: 0 0 15px crimson;
+            border: 2px solid crimson;
+        }
+        .room-card.unavailable-dates:hover {
+            transform: none;
+            box-shadow: 0 0 15px crimson;
+        }
+
+        .room-card:hover {
+            transform: scale(1.05);
+            background: rgba(10, 31, 68, 0.9);
+        }
+
+        /* Unavailable Overlay (NEW) */
+        .unavailable-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(220, 20, 60, 0.7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            z-index: 10;
+            pointer-events: none; /* Allows clicks to pass through to the underlying card logic */
+        }
+        .unavailable-overlay i { margin-right: 10px; }
+
+
+        /* SLIDER STYLES (existing) */
+        .image-slider-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+        }
+        .slider-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .slider-image.active {
+            opacity: 1;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 18px;
+            line-height: 1;
+            border-radius: 5px;
+        }
+        .prev-btn { left: 5px; }
+        .next-btn { right: 5px; }
+        /* END SLIDER STYLES */
+
+        .room-card .info {
+            padding: 15px;
+        }
+
+        .room-card h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .room-card p {
+            margin: 5px 0;
+        }
+
+        /* NEW: Total price display */
+        .total-price-display {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00ff7f;
+            margin-top: 10px;
+        }
+
+        .availability {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .available { color: #00ff7f; }
+        .booked { color: #ff4d4d; }
+
+        .book-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px;
+            align-self: center;
+            transition: background 0.3s;
+        }
+
+        .book-btn.can-book {
+            background: #ffd700;
+            color: #0a1f44;
+        }
+
+        .book-btn.can-book:hover {
+            background: #e6c200;
+        }
+
+        .book-btn:disabled,
+        .room-card.unavailable-dates .book-btn {
+            background: gray;
+            cursor: not-allowed;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="user-dashboard.html" class="back-btn">⬅ Back</a>
+    <div id="hotelName"></div>
+</div>
+
+<div class="filter-box">
+    <input type="date" id="checkInDate" required placeholder="Check-in Date" onchange="dateChanged()">
+    <input type="date" id="checkOutDate" required placeholder="Check-out Date" onchange="dateChanged()">
+
+    <input type="text" id="roomSearch" placeholder="Search by type...">
+    <input type="number" id="minPrice" placeholder="Min Price">
+    <input type="number" id="maxPrice" placeholder="Max Price">
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="resetFilters()">Reset All</button>
+    <p class="filter-info">Note: Changing dates automatically filters availability.</p>
+</div>
+
+<h1 style="text-align:center; color:#0a1f44; margin-top: 150px;">Available Rooms</h1>
+
+<div id="roomsContainer"></div>
+
+<script>
+    let allRooms = [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const hotelId = urlParams.get("hotelId");
+    const hotelName = urlParams.get("hotelName") || "Unknown Hotel";
+    document.getElementById("hotelName").innerText = hotelName;
+
+    // Set min date for check-in to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('checkInDate').min = today;
+
+    function setMinCheckOut() {
+        const checkInDateInput = document.getElementById('checkInDate');
+        const checkOutDateInput = document.getElementById('checkOutDate');
+        const checkInValue = checkInDateInput.value;
+
+        if (checkInValue) {
+            const checkInDate = new Date(checkInValue);
+            checkInDate.setDate(checkInDate.getDate() + 1);
+            checkOutDateInput.min = checkInDate.toISOString().split('T')[0];
+
+            if (checkOutDateInput.value <= checkInValue) {
+                checkOutDateInput.value = checkOutDateInput.min;
+            }
+        }
+    }
+
+    function dateChanged() {
+        setMinCheckOut();
+        applyFilters();
+    }
+
+    function calculateNights(start, end) {
+        const date1 = new Date(start);
+        const date2 = new Date(end);
+        const timeDiff = date2.getTime() - date1.getTime();
+        const dayDiff = timeDiff / (1000 * 60 * 60 * 24);
+        return Math.round(dayDiff);
+    }
+
+    function slideImage(roomId, direction) {
+        const sliderContainer = document.getElementById(`room-slider-${roomId}`);
+        if (!sliderContainer) return;
+
+        const images = sliderContainer.querySelectorAll('.slider-image');
+        if (images.length < 2) return;
+
+        let currentIndex = -1;
+
+        images.forEach((img, index) => {
+            if (img.classList.contains('active')) {
+                currentIndex = index;
+                img.classList.remove('active');
+            }
+        });
+
+        let newIndex = currentIndex + direction;
+
+        if (newIndex >= images.length) {
+            newIndex = 0;
+        } else if (newIndex < 0) {
+            newIndex = images.length - 1;
+        }
+
+        images[newIndex].classList.add('active');
+    }
+
+    async function loadRooms() {
+        try {
+            const res = await fetch(`http://localhost:8080/api/rooms/byHotel/${hotelId}`);
+            allRooms = await res.json();
+            // Initial load displays rooms marked 'available' by admin
+            displayRooms(allRooms.filter(room => room.available === true), false);
+        } catch (err) {
+            console.error("Error loading rooms:", err);
+            document.getElementById("roomsContainer").innerHTML = "<p style='color:crimson; grid-column: 1/-1;'>Failed to load room data. Check server connection.</p>";
+        }
+    }
+
+    async function applyFilters() {
+        const checkIn = document.getElementById("checkInDate").value;
+        const checkOut = document.getElementById("checkOutDate").value;
+
+        let roomsToFilter = allRooms;
+        let isDateFiltered = false;
+
+        if (checkIn && checkOut) {
+            const nights = calculateNights(checkIn, checkOut);
+            if (nights <= 0) {
+                displayRooms(allRooms, false);
+                return;
+            }
+
+            try {
+                const availableRes = await fetch(`http://localhost:8080/api/rooms/available/${hotelId}?checkInDate=${checkIn}&checkOutDate=${checkOut}`);
+                if (availableRes.ok) {
+                    roomsToFilter = await availableRes.json();
+                    isDateFiltered = true;
+                } else {
+                    console.error("Error checking availability via API. Status: " + availableRes.status);
+                    roomsToFilter = [];
+                }
+            } catch (e) {
+                console.error("Availability check failed:", e);
+                roomsToFilter = [];
+            }
+        } else {
+            // No dates selected: filter by admin status to show default available list
+            roomsToFilter = allRooms.filter(room => room.available === true);
+        }
+
+
+        // 2. Apply remaining client-side filters (Search, Price)
+
+        const search = document.getElementById("roomSearch").value.toLowerCase();
+        const minPrice = parseFloat(document.getElementById("minPrice").value) || 0;
+        const maxPrice = parseFloat(document.getElementById("maxPrice").value) || Infinity;
+
+        const filtered = roomsToFilter.filter(room => {
+
+            const nameMatch = !search ||
+                (room.type && room.type.toLowerCase().includes(search)) ||
+                (room.roomNumber && room.roomNumber.toLowerCase().includes(search));
+
+            const priceMatch = (room.price >= minPrice && room.price <= maxPrice);
+
+            return nameMatch && priceMatch;
+        });
+
+        displayRooms(filtered, isDateFiltered);
+    }
+
+    function displayRooms(rooms, filteredByDate = false) {
+        const container = document.getElementById("roomsContainer");
+        container.innerHTML = "";
+
+        const checkIn = document.getElementById("checkInDate").value;
+        const checkOut = document.getElementById("checkOutDate").value;
+        const nights = (checkIn && checkOut) ? calculateNights(checkIn, checkOut) : 0;
+        const datesSelectedAndValid = nights > 0;
+
+        if (!rooms || rooms.length === 0) {
+            let message = "No rooms found matching your criteria.";
+            if (datesSelectedAndValid && filteredByDate) {
+                message = `All rooms are booked or not available for ${nights} night(s).`;
+            }
+            container.innerHTML = `<p style='grid-column:1/-1;text-align:center; color:#0a1f44; padding: 20px;'>${message}</p>`;
+            return;
+        }
+
+        rooms.forEach(room => {
+            const card = document.createElement("div");
+            // A room is bookable if dates are NOT selected (default view) OR if it was returned by the filtered API call.
+            const isBookable = filteredByDate ? true : (room.available === true);
+
+            card.className = "room-card";
+
+            if (!isBookable) {
+                card.classList.add("unavailable-dates");
+            }
+
+            const roomImages = room.images || [];
+            const hasMultipleImages = roomImages.length > 1;
+
+            const imagesHtml = roomImages.length > 0
+                ? roomImages.map((img, index) => `
+                    <img src="${img.imageUrl}"
+                         class="slider-image ${index === 0 ? 'active' : ''}"
+                         alt="${room.type} image ${index + 1}" onerror="this.onerror=null;this.src='images/default-room.jpg'">
+                  `).join('')
+                : `<img src="images/default-room.jpg" class="slider-image active" alt="Default Room Image">`;
+
+            const buttonsHtml = hasMultipleImages
+                ? `
+                    <button class="slider-btn prev-btn" onclick="slideImage(${room.id}, -1)">&#10094;</button>
+                    <button class="slider-btn next-btn" onclick="slideImage(${room.id}, 1)">&#10095;</button>
+                  `
+                : '';
+
+            // Calculate total price for display
+            const totalPrice = (isBookable && datesSelectedAndValid) ? (room.price * nights).toFixed(2) : 'N/A';
+            const priceText = isBookable && datesSelectedAndValid ? `$${totalPrice} Total` : '';
+            const bookBtnText = isBookable ? "Book Now" : "Booked for these Dates";
+
+
+            card.innerHTML = `
+                ${!isBookable && datesSelectedAndValid ?
+                `<div class="unavailable-overlay">
+                        <i class="fas fa-calendar-times"></i> BOOKED
+                    </div>` : ''
+            }
+
+                <div class="image-slider-container" id="room-slider-${room.id}">
+                    ${imagesHtml}
+                    ${buttonsHtml}
+                </div>
+
+                <div class="info">
+                    <h2>Room ${room.roomNumber || ''}</h2>
+                    <p><b>Type:</b> ${room.type}</p>
+                    <p><b>Price:</b> $${room.price.toFixed(2)} / night</p>
+                    <p class="availability ${isBookable ? "available" : "booked"}">
+                        ${isBookable ? "Available ✅" : "Unavailable ❌"}
+                    </p>
+                    <p class="total-price-display">${priceText}</p>
+                </div>
+                <button class="book-btn ${isBookable ? 'can-book' : ''}" ${!isBookable ? "disabled" : ""}
+                    onclick="bookRoom('${hotelId}', ${room.id}, '${room.roomNumber}', '${room.type}', ${room.price})">
+                    ${bookBtnText}
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function resetFilters() {
+        document.getElementById("roomSearch").value = "";
+        document.getElementById("minPrice").value = "";
+        document.getElementById("maxPrice").value = "";
+        document.getElementById("checkInDate").value = "";
+        document.getElementById("checkOutDate").value = "";
+
+        // When resetting, show the list filtered by admin status only
+        displayRooms(allRooms.filter(room => room.available === true), false);
+    }
+
+    function bookRoom(hotelId, roomId, roomNumber, type, price) {
+        const checkInStr = document.getElementById("checkInDate").value;
+        const checkOutStr = document.getElementById("checkOutDate").value;
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        if (!user || !user.id) {
+            alert("Please log in to make a reservation.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!checkInStr || !checkOutStr) {
+            alert("Please select both Check-in and Check-out dates before booking.");
+            return;
+        }
+
+        const nights = calculateNights(checkInStr, checkOutStr);
+        if (nights <= 0) {
+            alert("Check-out date must be after Check-in date.");
+            return;
+        }
+
+        const totalPrice = price * nights;
+
+        sessionStorage.setItem("reservation", JSON.stringify({
+            userId: user.id,
+            roomId: roomId,
+            checkInDate: checkInStr,
+            checkOutDate: checkOutStr,
+
+            hotelId: hotelId,
+            hotelName: document.getElementById("hotelName").innerText,
+            roomNumber: roomNumber,
+            type: type,
+            price: price,
+            totalPrice: totalPrice
+        }));
+        window.location.href = "checkout.html";
+    }
+
+    loadRooms();
+    setMinCheckOut();
+</script>
+</body>
+</html>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Selected Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* === COLOR & FONT VARIABLES === */
+        :root {
+            --color-primary: #0077b6; /* Vibrant Blue */
+            --color-success: #2a9d8f; /* Accent Teal/Green */
+            --color-danger: #e63946; /* Crimson Red */
+            --color-dark-blue: #0a1f44;
+            --color-light-bg: #f8f9fa;
+        }
+
+        /* === General Page Styling === */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-light-bg);
+            color: #333;
+            /* Max width for content, applied via a wrapper div for better control */
+        }
+
+        /* === HERO HEADER (New Styling for Image) === */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 30vh; /* Taller hero section */
+            background: url('images/BRH1.png') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+        }
+
+        /* Fallback image style (use the provided URL if you name the file 'sri_lanka_hotel_hero.jpg')
+           If you cannot save the generated image locally, use a placeholder URL */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
+            z-index: 0; /* Ensure overlay is behind text/buttons */
+        }
+
+        .hero h1 {
+            font-size: 2.8em;
+            color: white;
+            z-index: 1; /* Bring text to front */
+            margin: 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        .back-link-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 2; /* Bring button to front */
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: white; /* Changed for contrast on dark background */
+            background: var(--color-danger); /* Added background for visibility */
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        .back-link:hover { background: darkred; }
+
+
+        /* === Content Wrapper === */
+        .content-wrapper {
+            max-width: 900px;
+            margin: auto;
+            padding: 0 20px 40px; /* Padding for the main content area */
+        }
+
+        /* === Cart Item Card Styling === */
+        .cart-container {
+            margin-top: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s;
+        }
+
+        .cart-item:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+            color: var(--color-dark-blue);
+        }
+
+        .item-info p {
+            margin: 4px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .item-price-unit {
+            font-weight: 600;
+            color: #444;
+        }
+
+        /* === Actions and Quantity === */
+        .quantity-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0 20px;
+        }
+
+        .qty-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .quantity-input {
+            width: 50px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .update-btn {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 6px 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.85em;
+        }
+
+        .update-btn:hover {
+            background-color: #005f96;
+        }
+
+        .item-total-price {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--color-success);
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .remove-btn {
+            background-color: var(--color-danger);
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: darkred;
+        }
+
+        /* === TOTALS & CHECKOUT === */
+        .checkout-summary-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        #cart-total {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--color-dark-blue);
+        }
+
+        .checkout-btn {
+            padding: 14px 30px;
+            background-color: var(--color-success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .checkout-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .checkout-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        /* === MODAL STYLES === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: auto; /* For browsers that don't support align-items/justify-content */
+            padding: 30px;
+            width: 80%;
+            max-width: 450px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .modal-content h2 {
+            color: var(--color-dark-blue);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #777;
+            text-decoration: none;
+        }
+
+        /* === PAYMENT FORM STYLES (NEW) === */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .modal-content input[type="text"] {
+            width: calc(100% - 22px); /* Full width minus padding and border */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* Include padding/border in the element's total width and height */
+            font-size: 1em;
+        }
+
+        .payment-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--color-success);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .payment-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Media Queries */
+        @media (max-width: 650px) {
+            .cart-item {
+                flex-wrap: wrap;
+            }
+            .item-info {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
+            .quantity-wrapper {
+                margin: 0;
+            }
+            .item-total-price {
+                min-width: 100px;
+                text-align: left;
+                order: 3;
+            }
+            .checkout-summary-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .cart-actions {
+                margin-top: 10px;
+            }
+            .hero h1 {
+                font-size: 2em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <div class="back-link-container">
+        <a href="user-dashboard.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> &nbsp; Back to Dashboard
+        </a>
+    </div>
+    <h1><i class="fas fa-shopping-cart"></i> Your Selected Services</h1>
+</div>
+
+<div class="content-wrapper">
+    <div id="cart" class="cart-container"></div>
+
+    <div id="checkoutBar" class="checkout-summary-bar" style="display: none;">
+        <div id="cart-total"></div>
+        <button class="checkout-btn" onclick="openPaymentModal()"><i class="fas fa-credit-card"></i> Proceed to Payment</button>
+    </div>
+</div>
+
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+        <h2>Simulated Payment Gateway</h2>
+        <p style="margin-top: 20px; font-size: 1.1em; font-weight: bold; color: var(--color-dark-blue);">Total Amount: $<span id="modal-total">0.00</span></p>
+
+        <form id="payment-form">
+            <div class="form-group">
+                <label for="cardNumber"><i class="fas fa-credit-card"></i> Card Number (Simulated)</label>
+                <input type="text" id="cardNumber" placeholder="xxxx xxxx xxxx xxxx (Any value)" required maxlength="19">
+            </div>
+            <div class="form-group" style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label for="expiry"><i class="far fa-calendar-alt"></i> Expiry Date</label>
+                    <input type="text" id="expiry" placeholder="MM/YY" required maxlength="5">
+                </div>
+                <div style="flex: 1;">
+                    <label for="cvv"><i class="fas fa-lock"></i> CVV</label>
+                    <input type="text" id="cvv" placeholder="123" required maxlength="4">
+                </div>
+            </div>
+            <button type="submit" class="payment-btn"><i class="fas fa-money-check-alt"></i> Simulate Pay Now</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    let currentCartTotal = 0;
+
+    if (!user || !user.id) {
+        alert("Please log in first.");
+        window.location.href = "login.html";
+    }
+
+    // --- CART MANAGEMENT FUNCTIONS ---
+
+    async function loadCart() {
+        // NOTE: Changed to relative path for generic usage, assuming the API is running locally
+        const res = await fetch(`/api/cart/${user.id}`);
+
+        // Error handling for fetch
+        if (!res.ok) {
+            console.error("Failed to load cart:", res.status, res.statusText);
+            const container = document.getElementById("cart");
+            container.innerHTML = "<p style='text-align: center; padding: 50px; background: white; border-radius: 10px; color: var(--color-danger);'>Failed to load cart. Check server connection.</p>";
+            document.getElementById("checkoutBar").style.display = 'none';
+            return;
+        }
+
+        const items = await res.json();
+
+        const container = document.getElementById("cart");
+        const checkoutBar = document.getElementById("checkoutBar");
+        container.innerHTML = "";
+        currentCartTotal = 0;
+
+        if (items.length === 0) {
+            container.innerHTML = "<p style='text-align: center; padding: 50px; background: white; border-radius: 10px;'>Your services selection is empty. Add services from the Hotel Services page.</p>";
+            checkoutBar.style.display = 'none';
+            return;
+        }
+
+        checkoutBar.style.display = 'flex';
+
+        for (const item of items) {
+            const itemTotal = item.price * item.quantity;
+            currentCartTotal += itemTotal;
+
+            const div = document.createElement("div");
+            div.classList.add("cart-item");
+            div.innerHTML = `
+              <img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/100x100?text=Service'">
+
+              <div class="item-info">
+                <h3>${item.name}</h3>
+                <p>Unit Price: <span class="item-price-unit">$${item.price.toFixed(2)}</span></p>
+                <p style="font-style: italic;">${item.description ? item.description.substring(0, 50) + '...' : ''}</p>
+              </div>
+
+              <div class="quantity-wrapper">
+                <label class="qty-label" for="qty-${item.cartItemId}">Qty:</label>
+                <input class="quantity-input" type="number" min="1" value="${item.quantity}" id="qty-${item.cartItemId}">
+                <button class="update-btn" onclick="updateQuantity(${item.cartItemId})"><i class="fas fa-sync-alt"></i></button>
+              </div>
+
+              <div class="item-total-price">
+                 $${itemTotal.toFixed(2)}
+              </div>
+
+              <div class="cart-actions">
+                <button class="remove-btn" onclick="removeFromCart(${item.cartItemId})"><i class="fas fa-trash-alt"></i></button>
+              </div>
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById("cart-total").innerText = `Total Price: $${currentCartTotal.toFixed(2)}`;
+    }
+
+    async function updateQuantity(cartItemId) {
+        const input = document.getElementById(`qty-${cartItemId}`);
+        const newQty = parseInt(input.value);
+        if (newQty < 1 || isNaN(newQty)) {
+            alert("Quantity must be a number and at least 1.");
+            loadCart();
+            return;
+        }
+
+        // Disable UI temporarily
+        const updateButton = document.querySelector(`#qty-${cartItemId}`).nextElementSibling;
+        updateButton.disabled = true;
+        updateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const res = await fetch(`/api/cart/update/${cartItemId}?quantity=${newQty}`, { method: "PUT" });
+        if(res.ok) {
+            loadCart(); // Reload the whole cart to show updated total
+        } else {
+            alert("Failed to update quantity on server.");
+            loadCart();
+        }
+    }
+
+    async function removeFromCart(itemId) {
+        await fetch(`/api/cart/remove/${itemId}`, { method: "DELETE" });
+        loadCart();
+    }
+
+    // --- PAYMENT SIMULATION FUNCTIONS ---
+
+    function openPaymentModal() {
+        if (currentCartTotal <= 0) {
+            alert("Your cart is empty. Please add items before checking out.");
+            return;
+        }
+        document.getElementById('modal-total').textContent = currentCartTotal.toFixed(2);
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('payment-form').reset();
+    }
+    window.closePaymentModal = closePaymentModal;
+
+    // Function to call the backend and finalize the order
+    async function completeCheckout() {
+        const res = await fetch(`/api/cart/checkout/${user.id}`, { method: "POST" });
+        const msg = await res.text();
+
+        if (res.ok) {
+            alert("✅ Payment Successful! " + msg);
+        } else {
+            alert("⚠️ Payment processed, but order finalization failed: " + msg);
+        }
+
+        loadCart();
+    }
+
+    // Event listener for the payment form submission inside the modal
+    document.getElementById('payment-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // Simple validation for simulated fields
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        const expiry = document.getElementById('expiry').value;
+        const cvv = document.getElementById('cvv').value;
+
+        if (cardNumber.length < 16 || !/^\d+$/.test(cardNumber) || expiry.length !== 5 || cvv.length < 3) {
+            alert("Please enter valid (simulated) card details.");
+            return;
+        }
+
+        const payButton = event.target.querySelector('.payment-btn');
+        const originalText = payButton.innerHTML;
+        payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        payButton.disabled = true;
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const isPaymentSuccessful = true; // Always successful in this simulation
+
+        if (isPaymentSuccessful) {
+            await completeCheckout();
+        } else {
+            alert("🚫 Payment Failed. Please check your card details and try again.");
+            payButton.innerHTML = originalText;
+            payButton.disabled = false;
+        }
+
+        closePaymentModal();
+    });
+
+    // Start the application
+    loadCart();
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* Fullscreen background image */
         body {
@@ -14,28 +15,30 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: url("images/WallpaperDog-20464523.jpg") no-repeat center center/cover;
+            /* NOTE: Ensure this image path is updated to the high-quality Sri Lanka image you selected */
+            background: url("images/Gemini_Generated_Image_1k6mup1k6mup1k6m.png") no-repeat center center/cover;
             color: #fff;
         }
 
         /* Glassmorphism form box */
-        .Singin-box {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 15px;
-            padding: 40px 30px;
-            width: 350px;
+        .Signin-box { /* Renamed class for consistency */
+            background: rgba(255, 255, 255, 0.1); /* Reduced opacity slightly for better glass effect */
+            backdrop-filter: blur(20px); /* Increased blur for deeper effect */
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 18px; /* Slightly rounder corners */
+            padding: 40px 35px;
+            width: 380px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); /* Deeper shadow */
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .Singin-box h1 {
-            margin-bottom: 25px;
-            font-size: 28px;
-            font-weight: 600;
+        .Signin-box h1 {
+            margin-bottom: 30px;
+            font-size: 30px;
+            font-weight: 700;
             color: #fff;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
 
         .input-box {
@@ -44,42 +47,67 @@
         }
 
         .input-box input {
+            /* FIX: Ensure padding is calculated inside the 100% width */
             width: 100%;
-            padding: 12px 15px;
+            padding: 14px 45px 14px 15px; /* Added space for icons */
             border: none;
             outline: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.25);
             color: #fff;
-            font-size: 14px;
+            font-size: 15px;
+            transition: background 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+
+        .input-box input:focus {
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
 
         .input-box input::placeholder {
             color: rgba(255, 255, 255, 0.8);
         }
 
-        .creat-acc {
+        /* NEW: Input Icons */
+        .input-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .login-btn { /* NEW: Renamed class for clarity */
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             background: #fff;
-            color: #2b2d42;
-            font-size: 16px;
+            color: #0a1f44; /* Used a dark color for contrast */
+            font-size: 17px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
         }
 
-        .creat-acc:hover {
+        .login-btn:hover {
             background: #1d3557;
             color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
         a {
             color: #fff;
             font-size: 14px;
             text-decoration: none;
+            margin-top: 20px;
+            display: block;
         }
 
         a:hover {
@@ -88,16 +116,18 @@
     </style>
 </head>
 <body>
-<div class="Singin-box">
+<div class="Signin-box">
     <h1>Login</h1>
     <form id="loginForm">
         <div class="input-box">
             <input type="email" id="email" placeholder="E-mail" required />
+            <i class="fas fa-envelope"></i>
         </div>
         <div class="input-box">
             <input type="password" id="password" placeholder="Password" required />
+            <i class="fas fa-lock"></i>
         </div>
-        <button type="submit" class="creat-acc">Login</button>
+        <button type="submit" class="login-btn">Login</button>
     </form>
     <p>Don’t have an account? <a href="register.html">Register</a></p>
 </div>
@@ -118,13 +148,21 @@
 
             if (res.ok) {
                 const user = await res.json();
-                localStorage.setItem("user", JSON.stringify(user));
 
-                if (user.role === "ADMIN") {
+                //store everything needed
+                localStorage.setItem("user", JSON.stringify(user));
+                localStorage.setItem("userId", user.id);
+                localStorage.setItem("userEmail", user.email);
+
+                //redirect by role (assuming backend returns ROLE_ADMIN, ROLE_USER, etc.)
+                if (user.role.includes("ADMIN")) {
                     window.location.href = "admin-dashboard.html";
+                } else if (user.role.includes("MANAGER")) {
+                    window.location.href = "admin-services.html";
                 } else {
                     window.location.href = "user-dashboard.html";
                 }
+
             } else {
                 alert("Invalid email or password.");
             }
@@ -134,5 +172,6 @@
         }
     });
 </script>
+
 </body>
 </html>

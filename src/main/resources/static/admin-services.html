@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Manage Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Modern Variables */
+        :root {
+            --color-primary: #0077b6; /* Vibrant Blue */
+            --color-success: #2a9d8f; /* Accent Teal/Green */
+            --color-danger: #e63946; /* Crimson Red */
+            --color-dark: #2b3e50; /* Deep Charcoal */
+            --color-light-bg: #f8f9fa; /* Warm off-white */
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-light-bg);
+            margin: 20px auto;
+            max-width: 950px;
+            color:black ;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: var(--color-dark);
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        a.view-services-link {
+            display: inline-flex;
+            align-items: center;
+            margin: 0 0 20px 0;
+            padding: 8px 15px;
+            background-color: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        a.view-services-link i { margin-right: 8px; }
+        a.view-services-link:hover {
+            background-color: #005f96;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--color-danger);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .logout-btn:hover {
+            background-color: #d62839;
+        }
+
+        /* Forms (Add Form) */
+        form {
+            background: white;
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--color-success);
+        }
+        form h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            color: var(--color-dark);
+        }
+        input, textarea, select {
+            display: block;
+            width: 100%;
+            margin: 8px 0 15px;
+            padding: 12px;
+            font-size: 1em;
+            border: 1.5px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.3s ease, box-shadow 0.3s;
+            font-family: inherit;
+            color: #333;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15);
+        }
+        button {
+            padding: 12px 20px;
+            background-color: var(--color-success);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        button i { margin-right: 8px; }
+        button:hover {
+            background-color: #268c7c;
+            transform: translateY(-1px);
+        }
+
+        /* Service Cards */
+        .service-list {
+            margin-top: 10px;
+        }
+        .service-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .service-card img {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .service-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .service-info h3 {
+            margin: 0 0 8px 0;
+            color: var(--color-dark);
+        }
+        .service-info p {
+            margin: 4px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+        .service-info p b {
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+        .service-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .service-actions button {
+            background-color: var(--color-danger);
+            padding: 10px 14px;
+            font-size: 0.9em;
+            border-radius: 6px;
+            flex-grow: 1;
+        }
+        .service-actions button:nth-child(2) {
+            background-color: var(--color-primary);
+        }
+        .service-actions button:hover:nth-child(1) {
+            background-color: #a71d2a;
+        }
+        .service-actions button:hover:nth-child(2) {
+            background-color: #005f96;
+        }
+        /* Update Form Styling (The dynamic panel) */
+        .update-form-container {
+            margin-top: 15px;
+            background-color: #e9f5ff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 8px rgba(0,123,255,0.1);
+            width: 100%;
+        }
+        .update-form-container button {
+            background: var(--color-primary);
+            margin-top: 10px;
+        }
+        .update-form-container button:hover { background: #005f96; }
+
+        @media (max-width: 600px) {
+            .service-card { flex-direction: column; align-items: flex-start; }
+            .service-actions { width: 100%; justify-content: space-between; }
+            .service-actions button { flex-grow: unset; width: 48%; }
+            .logout-btn { right: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div style="position: relative; width: 100%; margin-bottom: 20px;">
+    <a href="#" class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <h1>Manage Hotel Services</h1>
+</div>
+<a href="services.html" class="view-services-link"><i class="fas fa-arrow-left"></i> View Services</a>
+
+<form id="addForm">
+    <h3><i class="fas fa-plus-circle"></i> Add New Service</h3>
+    <input type="text" id="addName" placeholder="Service Name" required>
+    <textarea id="addDescription" placeholder="Description" required></textarea>
+    <input type="number" id="addPrice" placeholder="Price" min="0" step="0.01" required>
+    <input type="text" id="addImage" placeholder="Image URL">
+    <select id="addHotelId" required>
+        <option value="">-- Select Hotel --</option>
+    </select>
+    <button type="submit"><i class="fas fa-check"></i> Add Service</button>
+</form>
+
+<div class="service-list" id="serviceList"></div>
+
+<script>
+    const serviceList = document.getElementById("serviceList");
+    const hotelDropdown = document.getElementById("addHotelId");
+    let allHotels = [];
+
+    function escapeQuotes(str) {
+        if (!str) return '';
+        return str.replace(/'/g, "\\'");
+    }
+
+    async function loadHotels() {
+        try {
+            const res = await fetch("http://localhost:8080/api/hotels");
+            allHotels = await res.json();
+            hotelDropdown.innerHTML = '<option value="">-- Select Hotel --</option>';
+
+            allHotels.forEach(hotel => {
+                const option = document.createElement('option');
+                option.value = hotel.id;
+                option.textContent = hotel.name;
+                hotelDropdown.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error loading hotels for dropdown:", err);
+            // Optionally, add a message to the dropdown itself
+            hotelDropdown.innerHTML = '<option value="">-- Error Loading Hotels --</option>';
+        }
+    }
+
+    function loadServices() {
+        fetch("/api/services")
+            .then(res => res.json())
+            .then(data => {
+                serviceList.innerHTML = "";
+                if (data.length === 0) {
+                    serviceList.innerHTML = "<p style='text-align: center; padding: 30px; border: 2px dashed #ccc; border-radius: 8px;'>No services added yet.</p>";
+                    return;
+                }
+                data.forEach(s => {
+                    const hotelName = s.hotel ? s.hotel.name : 'Unassigned';
+
+                    const div = document.createElement("div");
+                    div.classList.add("service-card");
+                    div.innerHTML = `
+                            <img src="${s.imageUrl || 'https://via.placeholder.com/150x100?text=No+Image'}" alt="${s.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/150x100?text=Image+Error'">
+                            <div class="service-info">
+                                <h3>${s.name}</h3>
+                                <p>${s.description}</p>
+                                <p>Hotel: <b>${hotelName}</b></p>
+                                <p>Price: <b>$${s.price.toFixed(2)}</b></p>
+                            </div>
+                            <div class="service-actions">
+                                <button onclick="deleteService(${s.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+                                <button onclick="showUpdateForm(${s.id}, '${escapeQuotes(s.name)}', '${escapeQuotes(s.description)}', ${s.price}, '${escapeQuotes(s.imageUrl || '')}', ${s.hotel ? s.hotel.id : 'null'})"><i class="fas fa-pen"></i> Update</button>
+                            </div>
+                            <div id="updateFormContainer-${s.id}" class="update-form-container" style="display:none;"></div>
+                        `;
+                    serviceList.appendChild(div);
+                });
+            });
+    }
+
+    // Add service
+    document.getElementById("addForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const hotelId = document.getElementById("addHotelId").value;
+        const submitBtn = e.target.querySelector('button');
+        submitBtn.disabled = true;
+
+        const newService = {
+            name: document.getElementById("addName").value.trim(),
+            description: document.getElementById("addDescription").value.trim(),
+            price: parseFloat(document.getElementById("addPrice").value),
+            imageUrl: document.getElementById("addImage").value.trim(),
+            hotel: { id: hotelId }
+        };
+
+        if (!hotelId) {
+            alert("Please select a hotel.");
+            submitBtn.disabled = false;
+            return;
+        }
+
+        fetch("/api/services", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newService)
+        }).then(() => {
+            e.target.reset();
+            loadServices();
+            alert("Service added successfully!");
+        }).catch(e => {
+            alert("Failed to add service.");
+            console.error(e);
+        }).finally(() => {
+            submitBtn.disabled = false;
+        });
+    });
+
+    // Delete service
+    function deleteService(id) {
+        if(confirm("Are you sure you want to delete this service?")) {
+            fetch(`/api/services/${id}`, { method: "DELETE" })
+                .then(() => {
+                    loadServices();
+                    alert("Service deleted.");
+                }).catch(e => {
+                alert("Failed to delete service.");
+                console.error(e);
+            });
+        }
+    }
+
+    // Show update form - Corrected function to insert the form HTML
+    function showUpdateForm(id, name, description, price, imageUrl, currentHotelId) {
+        const containerDiv = document.getElementById(`updateFormContainer-${id}`);
+
+        // Toggle visibility
+        if(containerDiv.style.display === 'block') {
+            containerDiv.style.display = 'none';
+            containerDiv.innerHTML = '';
+            return;
+        }
+
+        // Build the hotel options HTML string
+        const hotelOptions = allHotels.map(h =>
+            `<option value="${h.id}" ${h.id == currentHotelId ? 'selected' : ''}>${h.name}</option>`
+        ).join('');
+
+        containerDiv.style.display = "block";
+        containerDiv.innerHTML = `
+                <form class="update-form" onsubmit="updateService(event, ${id})">
+                  <input type="text" id="updateName-${id}" placeholder="Name" value="${name}" required>
+                  <textarea id="updateDescription-${id}" placeholder="Description" required>${description}</textarea>
+                  <input type="number" id="updatePrice-${id}" placeholder="Price" value="${price}" min="0" step="0.01" required>
+                  <input type="text" id="updateImage-${id}" placeholder="Image URL" value="${imageUrl}">
+                  <select id="updateHotelId-${id}" required>
+                    <option value="">-- Select Hotel --</option>
+                    ${hotelOptions}
+                  </select>
+                  <button type="submit"><i class="fas fa-save"></i> Save</button>
+                </form>
+            `;
+    }
+
+    // Update service
+    function updateService(event, id) {
+        event.preventDefault();
+        const hotelId = document.getElementById(`updateHotelId-${id}`).value;
+        const submitBtn = event.target.querySelector('button');
+        submitBtn.disabled = true;
+
+        const updatedService = {
+            name: document.getElementById(`updateName-${id}`).value.trim(),
+            description: document.getElementById(`updateDescription-${id}`).value.trim(),
+            price: parseFloat(document.getElementById(`updatePrice-${id}`).value),
+            imageUrl: document.getElementById(`updateImage-${id}`).value.trim(),
+            hotel: { id: hotelId }
+        };
+
+        if (!hotelId) {
+            alert("Please select a hotel.");
+            submitBtn.disabled = false;
+            return;
+        }
+
+        fetch(`/api/services/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedService)
+        }).then(() => {
+            loadServices();
+            alert("Service updated successfully!");
+            // Close the form after success
+            document.getElementById(`updateFormContainer-${id}`).style.display = 'none';
+        }).catch(e => {
+            alert("Failed to update service.");
+            console.error(e);
+        }).finally(() => {
+            submitBtn.disabled = false;
+        });
+    }
+
+    // Logout function
+    function logout() {
+        fetch("/logout", { method: "POST" })
+            .then(() => {
+                window.location.href = "/login.html";
+            })
+            .catch(() => {
+                alert("Logout failed.");
+            });
+    }
+    window.logout = logout;
+
+    // Expose update functions globally for inline HTML to call them
+    window.deleteService = deleteService;
+    window.showUpdateForm = showUpdateForm;
+    window.updateService = updateService;
+
+    // Initial load
+    loadHotels();
+    loadServices();
+</script>
+</body>
+</html>

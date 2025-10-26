@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel Services</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 60px 20px;
+            margin: 0 0 30px 0;
+            font-size: 2.5em;
+            color: white;
+            background: url('images/R (2).jpeg') center/cover no-repeat;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        .services-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0 20px 40px;
+            gap: 20px;
+        }
+
+        .service-card {
+            background-color: black;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 16px;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .service-card img {
+            max-width: 100%;
+            border-radius: 10px;
+            height: 160px;
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+
+        .service-card h3 {
+            margin: 10px 0 8px;
+            font-size: 1.2em;
+            color: #222;
+        }
+
+        .service-card p {
+            font-size: 0.95em;
+            margin: 6px 0;
+        }
+
+        .service-card b {
+            color: #28a745;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        @media (max-width: 600px) {
+            .service-card {
+                width: 90%;
+            }
+
+            h1 {
+                font-size: 2em;
+                padding: 40px 15px;
+            }
+        }
+    </style>
+
+</head>
+<body>
+<h1>Hotel Services</h1>
+<div id="services" class="services-container"></div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || !user.id) {
+        alert("Please log in first.");
+        window.location.href = "login.html";
+    }
+
+    async function loadServices() {
+        try {
+            const res = await fetch("/api/services");
+            const data = await res.json();
+            const container = document.getElementById("services");
+            container.innerHTML = "";
+
+            data.forEach(service => {
+                const div = document.createElement("div");
+                div.classList.add("service-card");
+                div.innerHTML = `
+                    <img src="${service.imageUrl}" alt="${service.name}">
+                    <h3>${service.name}</h3>
+                    <p>${service.description}</p>
+                    <p><b>$${service.price}</b></p>
+                    <button onclick="addToCart(${service.id})">Add</button>
+                `;
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error("Error loading services:", err);
+            alert("Failed to load services.");
+        }
+    }
+
+    async function addToCart(serviceId) {
+        if (!serviceId) {
+            alert("Invalid service ID.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/cart/add?userId=${user.id}&serviceId=${serviceId}&quantity=1`, {
+                method: "POST"
+            });
+
+            if (res.ok) {
+                window.location.href = "cart.html"; // redirect to cart
+            } else {
+                const errorText = await res.text();
+                alert("Failed to add to cart: " + errorText);
+            }
+        } catch (err) {
+            console.error("Error adding to cart:", err);
+            alert("Error adding to cart.");
+        }
+    }
+
+    loadServices();
+</script>
+</body>
+</html>

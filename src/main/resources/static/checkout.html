@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - Reservation</title>
+    <style>
+        /* === BASE STYLES === */
+        body {
+            font-family: Arial, sans-serif;
+            background: url("images/H1R2.jpg") no-repeat center center/cover;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .checkout-card {
+            background: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        .details {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .details p {
+            margin: 8px 0;
+        }
+        .confirm-btn {
+            background: #0a1f44;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+        .confirm-btn:hover:not(:disabled) {
+            background: #142f66;
+            transform: scale(1.05);
+        }
+        .confirm-btn:disabled {
+            background: #777;
+            cursor: wait;
+        }
+
+        /* === NEW: MODAL STYLES === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+            color: #333;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #modal-total {
+            color: #28a745;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .payment-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        .payment-btn:hover:not(:disabled) { background-color: #218838; }
+        .payment-btn:disabled { background-color: #a3d9b4; cursor: wait; }
+    </style>
+</head>
+<body>
+<div class="checkout-card">
+    <h2>Confirm Your Reservation</h2>
+    <div class="details" id="reservationDetails"></div>
+    <button class="confirm-btn" id="confirmButton" onclick="openPaymentModal()">Proceed to Payment</button>
+</div>
+
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+        <h2>Simulated Payment Gateway</h2>
+        <p>Total Amount: $<span id="modal-total">0.00</span></p>
+
+        <form id="payment-form">
+            <div class="form-group">
+                <label for="cardNumber">Card Number (Simulated)</label>
+                <input type="text" id="cardNumber" placeholder="xxxx xxxx xxxx xxxx (Any value)" required maxlength="19">
+            </div>
+            <div class="form-group">
+                <label for="expiry">Expiry Date</label>
+                <input type="text" id="expiry" placeholder="MM/YY" required maxlength="5">
+            </div>
+            <div class="form-group">
+                <label for="cvv">CVV</label>
+                <input type="text" id="cvv" placeholder="123" required maxlength="4">
+            </div>
+            <button type="submit" class="payment-btn">Simulate Pay Now</button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    // Load reservation from sessionStorage
+    const reservation = JSON.parse(sessionStorage.getItem("reservation"));
+    const detailsDiv = document.getElementById("reservationDetails");
+    const confirmButton = document.getElementById("confirmButton");
+    let reservationConfirmed = false; // Flag to prevent double submission
+
+    if (reservation) {
+        detailsDiv.innerHTML = `
+            <p><b>User ID:</b> ${reservation.userId}</p>
+            <p><b>Hotel:</b> ${reservation.hotelName}</p>
+            <p><b>Room:</b> ${reservation.roomNumber} (${reservation.type})</p>
+            <p><b>Check-in:</b> ${reservation.checkInDate}</p>
+            <p><b>Check-out:</b> ${reservation.checkOutDate}</p>
+            <p><b>Price per Night:</b> $${reservation.price.toFixed(2)}</p>
+            <hr style="margin: 10px 0; border-color: #ffd700;">
+            <p><b>Total Price:</b> <span style="font-size: 1.3em; color: #ffd700;">$${reservation.totalPrice.toFixed(2)}</span></p>
+        `;
+    } else {
+        detailsDiv.innerHTML = "<p>No reservation found. Please return to the Rooms page.</p>";
+        confirmButton.disabled = true;
+    }
+
+    // --- MODAL & PAYMENT SIMULATION LOGIC ---
+
+    function openPaymentModal() {
+        if (!reservation) return;
+
+        // Update the total amount displayed in the modal
+        document.getElementById('modal-total').textContent = reservation.totalPrice.toFixed(2);
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('payment-form').reset();
+    }
+    window.closePaymentModal = closePaymentModal; // Expose globally
+
+    async function confirmReservation() {
+        if (!reservation || reservationConfirmed) return;
+        reservationConfirmed = true; // Set flag
+
+        const res = await fetch("http://localhost:8080/api/reservations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(reservation)
+        });
+
+        if (res.ok) {
+            alert("✅ Payment Successful! Reservation Confirmed!");
+            sessionStorage.removeItem("reservation");
+            window.location.href = "user-dashboard.html";
+        } else if (res.status === 409) {
+            alert("❌ Booking failed! The room is already reserved for the selected dates. Please choose different dates.");
+        } else {
+            alert("❌ Payment processed, but order finalization failed due to a server error. Status: " + res.status);
+        }
+        reservationConfirmed = false; // Reset flag on failure/error
+    }
+
+    // Event listener for the payment form submission inside the modal
+    document.getElementById('payment-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const payButton = event.target.querySelector('.payment-btn');
+        const originalText = payButton.textContent;
+        payButton.textContent = 'Processing Payment...';
+        payButton.disabled = true;
+        confirmButton.disabled = true;
+
+        // --- SIMULATED PAYMENT CORE LOGIC (2-second delay) ---
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const isPaymentSuccessful = true; // Simulation result: always true
+
+        if (isPaymentSuccessful) {
+            closePaymentModal();
+            // Call the backend to finalize the transaction
+            await confirmReservation();
+        } else {
+            // Simulated payment failure
+            alert("🚫 Payment Failed. Please check your card details and try again.");
+        }
+
+        // Restore UI state if confirmReservation failed or if payment simulation failed
+        payButton.textContent = originalText;
+        payButton.disabled = false;
+        if (!reservationConfirmed) {
+            confirmButton.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

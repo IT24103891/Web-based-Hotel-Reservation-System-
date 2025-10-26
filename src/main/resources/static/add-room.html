@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Room</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Modern Variables */
+        :root {
+            --color-primary: #0077b6; /* Vibrant Blue */
+            --color-success: #2a9d8f; /* Accent Teal/Green */
+            --color-dark: #2b3e50; /* Deep Charcoal */
+            --color-light-bg: #f8f9fa; /* Warm off-white */
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--color-light-bg);
+            margin: 0;
+            padding: 40px;
+            color: var(--color-dark);
+            display: flex;
+            justify-content: center;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 500px;
+            border-left: 5px solid var(--color-primary);
+        }
+        h1 {
+            color: var(--color-dark);
+            margin-top: 0;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+        }
+        h1 i { margin-right: 10px; color: var(--color-success); }
+        .back-link {
+            text-decoration: none;
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #005f96;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .required { color: var(--color-danger); }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15);
+        }
+        textarea {
+            resize: vertical;
+        }
+        button[type="submit"] {
+            background: var(--color-success);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.3s, transform 0.1s;
+            width: 100%;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+        button[type="submit"]:hover { background: #268c7c; transform: translateY(-1px); }
+        button[type="submit"]:disabled { background: #ccc; cursor: not-allowed; transform: none;}
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <a id="backLink" href="admin-dashboard.html" class="back-link">
+        <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back
+    </a>
+    <h1><i class="fas fa-bed"></i> Add New Room</h1>
+    <form id="roomForm">
+        <label for="hotelSelect">Select Hotel <span class="required">*</span></label>
+        <select id="hotelSelect" required></select>
+
+        <label for="roomNumber">Room Number <span class="required">*</span></label>
+        <input id="roomNumber" placeholder="e.g., 101" required>
+
+        <label for="type">Room Type <span class="required">*</span></label>
+        <input id="type" placeholder="e.g., Deluxe Suite, Standard" required>
+
+        <label for="price">Price ($/Night) <span class="required">*</span></label>
+        <input id="price" type="number" step="0.01" placeholder="e.g., 150.00" required>
+
+        <label for="available">Availability</label>
+        <select id="available">
+            <option value="true">Available</option>
+            <option value="false">Not Available</option>
+        </select>
+
+        <label for="roomImages">Room Image URLs (One per line)</label>
+        <textarea id="roomImages" placeholder="https://image1.jpg&#10;https://image2.jpg" rows="4"></textarea>
+
+        <button type="submit" id="addRoomBtn">Add Room</button>
+    </form>
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedHotelId = urlParams.get('hotelId');
+    const backLink = document.getElementById('backLink');
+    const addRoomBtn = document.getElementById('addRoomBtn');
+
+    // Utility for loading state
+    function setLoading(isLoading) {
+        if (isLoading) {
+            addRoomBtn.dataset.originalText = addRoomBtn.innerHTML;
+            addRoomBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            addRoomBtn.disabled = true;
+        } else {
+            addRoomBtn.innerHTML = addRoomBtn.dataset.originalText || 'Add Room';
+            addRoomBtn.disabled = false;
+        }
+    }
+
+    // Helper to convert text input to an array of Image objects
+    function urlsToImages(urlText) {
+        return urlText.split(/[\n,]/)
+            .map(url => url.trim())
+            .filter(url => url.length > 0)
+            .map((url, index) => ({ imageUrl: url, displayOrder: index }));
+    }
+
+    async function loadHotels() {
+        try {
+            const res = await fetch("http://localhost:8080/api/hotels");
+            const hotels = await res.json();
+            const select = document.getElementById("hotelSelect");
+
+            // UX Improvement: Hide select if preselected
+            if (preselectedHotelId) {
+                select.previousElementSibling.style.display = 'none'; // Hide label
+                select.style.display = 'none'; // Hide select
+                backLink.href = `manage-rooms.html?hotelId=${preselectedHotelId}`; // Update back link
+            } else {
+                backLink.href = 'admin-dashboard.html'; // Set back link to dashboard if no hotelId
+            }
+
+            if (hotels.length === 0) {
+                select.innerHTML = "<option>No Hotels Available</option>";
+                addRoomBtn.disabled = true;
+                return;
+            }
+            addRoomBtn.disabled = false;
+
+            hotels.forEach(h => {
+                const opt = document.createElement("option");
+                opt.value = h.id;
+                opt.textContent = `${h.name} (${h.location})`;
+                if (h.id == preselectedHotelId) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        } catch(e) {
+            console.error("Failed to load hotels:", e);
+            addRoomBtn.disabled = true;
+            alert("Error loading hotels. Please check the API connection.");
+        }
+    }
+
+    document.getElementById("roomForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        setLoading(true);
+
+        const hotelId = preselectedHotelId || hotelSelect.value;
+
+        if (hotelId === "No Hotels Available") {
+            alert("Cannot add room, please add a hotel first.");
+            setLoading(false);
+            return;
+        }
+
+        const roomImagesText = document.getElementById("roomImages").value;
+
+        const room = {
+            roomNumber: roomNumber.value,
+            type: type.value,
+            price: parseFloat(price.value),
+            available: available.value==="true",
+            images: urlsToImages(roomImagesText)
+        };
+
+        try {
+            const res = await fetch(`http://localhost:8080/api/rooms?hotelId=${hotelId}`, {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify(room)
+            });
+
+            if (res.ok) {
+                alert("Room added successfully! Redirecting...");
+                // Redirect back to the specific hotel's management page or the main dashboard
+                if (preselectedHotelId) {
+                    window.location.href = `manage-rooms.html?hotelId=${preselectedHotelId}`;
+                } else {
+                    window.location.href = "admin-dashboard.html";
+                }
+            } else {
+                alert("Failed to add room.");
+            }
+        } catch (error) {
+            alert("An error occurred during submission.");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+
+        e.target.reset();
+    });
+
+    loadHotels();
+</script>
+</body>
+</html>
